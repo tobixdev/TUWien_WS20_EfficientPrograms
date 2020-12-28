@@ -1,10 +1,10 @@
 
- Performance counter stats for 'java nqueens 8':
+ Performance counter stats for 'java nqueens 16':
 
-         196682381      cycles                                                      
-         185713054      instructions              #    0.94  insn per cycle                                            
-            297652      cache-misses                                                
-           1311449      branch-misses                                               
+      390911350165      cycles                                                      
+      568897976976      instructions              #    1.46  insn per cycle                                            
+           1452132      cache-misses                                                
+        8102513687      branch-misses                                               
 
-       0.080129915 seconds time elapsed
+     116.517592952 seconds time elapsed
 
