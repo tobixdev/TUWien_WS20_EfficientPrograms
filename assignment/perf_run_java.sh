@@ -1,0 +1,1 @@
+perf stat -e cycles -e instructions -e cache-misses -e branch-misses java nqueens 16 > perf_result_java.txt
