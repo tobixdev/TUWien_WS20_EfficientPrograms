@@ -11,3 +11,9 @@ nqueens.o: nqueens.c
 
 clean:
 	@ rm -rf *.o nqueens
+
+perf:
+	@ perf_run.sh
+
+clean-perf:
+	@ rm perf_output.txt perf_result.txt

@@ -1,0 +1,10 @@
+
+ Performance counter stats for './nqueens 8':
+
+           1432661      cycles                                                      
+            952747      instructions              #    0.67  insn per cycle                                            
+              2592      cache-misses                                                
+             18797      branch-misses                                               
+
+       0.001394912 seconds time elapsed
+
