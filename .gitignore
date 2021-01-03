@@ -1,6 +1,6 @@
 /.idea/
 /TUWien_WS20_EfficientPrograms.iml
 *.o
-nqueens
+life
 readlife.tab.o
 readlife.tab.c
