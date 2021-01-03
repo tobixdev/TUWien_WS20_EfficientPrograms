@@ -1,0 +1,1 @@
+perf stat -e cycles -e instructions -e cache-misses -e branch-misses ./life 500 < ./assignment/f0.l 2>perf_result.txt 1>/dev/null

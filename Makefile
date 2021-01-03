@@ -14,11 +14,8 @@ readlife.tab.c: readlife.y
 clean:
 	rm -rf life *.o readlife.tab.c effizienz-aufgabe07
 
-effizienz-aufgabe07.tar.gz: $(SOURCES) $(GEN)
-	-rm -rf effizienz-aufgabe07
-	mkdir effizienz-aufgabe07
-	cp -p $(SOURCES) $(GEN) effizienz-aufgabe07
-	tar cfz effizienz-aufgabe07.tar.gz effizienz-aufgabe07
+perf:
+	./perf_run.sh
 
-dist: $(SOURCES) $(GEN) effizienz-aufgabe07.tar.gz
-	cp -p $(SOURCES) $(GEN) effizienz-aufgabe07.tar.gz /nfs/unsafe/httpd/ftp/pub/anton/lvas/effizienz-aufgabe07
+test:
+	life 500 <./assignment/f0.l |sort |diff - ./assignment/f0500.l

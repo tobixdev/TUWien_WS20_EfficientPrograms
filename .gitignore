@@ -2,3 +2,5 @@
 /TUWien_WS20_EfficientPrograms.iml
 *.o
 nqueens
+readlife.tab.o
+readlife.tab.c
