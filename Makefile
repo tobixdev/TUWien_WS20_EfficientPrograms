@@ -19,3 +19,4 @@ perf:
 
 test:
 	life 500 <./assignment/f0.l |sort |diff - ./assignment/f0500.l
+	life 3000 <./assignment/f0.l |sort |diff - ./assignment/f3000.l

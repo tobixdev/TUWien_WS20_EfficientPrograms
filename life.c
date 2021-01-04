@@ -16,17 +16,27 @@ Worklist* current_worklist;
 Worklist* next_worklist;
 
 void push(Worklist* worklist, char* field) {
-  for (int i = 0; i < worklist->current; i++) {
-    if (worklist->elements[i] == field) {
+  int bucket_index = ((long) field) % BUCKET_COUNT;
+  WorklistBucket* bucket = worklist->buckets[bucket_index];
+
+  for (int i = 0; i < bucket->current; i++) {
+    if (bucket->elements[i] == field) {
       return;
     }
   }
-  worklist->current++;
-  worklist->elements[worklist->current] = field;
+
+  bucket->current++;
+  bucket->elements[bucket->current] = field;
 }
 
 char* pop(Worklist* worklist) {
-  return worklist->elements[worklist->current--];
+  for (int i = 0; i < BUCKET_COUNT; i++) {
+    WorklistBucket* bucket = worklist->buckets[i];
+    if (bucket->current >= 0) {
+      return bucket->elements[bucket->current--];
+    }
+  }
+  return NULL;
 }
 
 Celllist *newcell(long x, long y, Celllist *l)
@@ -69,14 +79,12 @@ void push_neighbourhood(Worklist* worklist, char* cell)
 
 void onegeneration()
 {
-  int i = 0;
-  while(current_worklist->current >= 0) {
-      char* cell = pop(current_worklist);
+  char* cell = NULL;
+  while((cell = pop(current_worklist)) != NULL) {
       long n = neighbourhood(cell);
       char* cell_new = ((char*) *next) + (cell - ((char*) *current));
       *cell_new = (n == 3) | (n == 11) | (n == 12);
       if ((*cell_new) != (*cell)) {
-        i++;
         push_neighbourhood(next_worklist, cell_new);
       }
   }
@@ -84,7 +92,6 @@ void onegeneration()
   current = next;
   next = h;
   
-  current_worklist->current = -1;
   Worklist* h_worklist = current_worklist;
   current_worklist = next_worklist;
   next_worklist = h_worklist;
@@ -150,8 +157,12 @@ int main(int argc, char **argv)
 
   current_worklist = malloc(sizeof(Worklist));
   next_worklist = malloc(sizeof(Worklist));
-  current_worklist->current = -1;
-  next_worklist->current = -1;
+  for (int i = 0; i < BUCKET_COUNT; i++) {
+    current_worklist->buckets[i] = malloc(sizeof(WorklistBucket));
+    next_worklist->buckets[i] = malloc(sizeof(WorklistBucket));
+    current_worklist->buckets[i]->current = -1;
+    next_worklist->buckets[i]->current = -1;
+  }
   
   for (Celllist* l = gen0; l; l = l->next){
     (*current)[l->x + OFFSET][l->y + OFFSET] = 1;

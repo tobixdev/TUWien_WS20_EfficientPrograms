@@ -1,0 +1,11 @@
+5129 cells alive
+
+ Performance counter stats for './life 3000':
+
+       11568170557      cycles                                                      
+       24618958459      instructions              #    2.13  insn per cycle                                            
+            690183      cache-misses                                                
+          82239256      branch-misses                                               
+
+       3.454287020 seconds time elapsed
+
