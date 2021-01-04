@@ -6,11 +6,8 @@
 FILE *infile;
 Celllist *gen0;
 
-char buf1[BUFFER_SIZE][BUFFER_SIZE];
-char buf2[BUFFER_SIZE][BUFFER_SIZE];
-
-char (*current)[BUFFER_SIZE][BUFFER_SIZE] = &buf1;
-char (*next)[BUFFER_SIZE][BUFFER_SIZE] = &buf2;
+Buffer* current;
+Buffer* next;
 
 Worklist* current_worklist;
 Worklist* next_worklist;
@@ -82,13 +79,13 @@ void onegeneration()
   char* cell = NULL;
   while((cell = pop(current_worklist)) != NULL) {
       long n = neighbourhood(cell);
-      char* cell_new = ((char*) *next) + (cell - ((char*) *current));
+      char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
       *cell_new = (n == 3) | (n == 11) | (n == 12);
       if ((*cell_new) != (*cell)) {
         push_neighbourhood(next_worklist, cell_new);
       }
   }
-  char (*h)[BUFFER_SIZE][BUFFER_SIZE] = current;
+  Buffer* h = current;
   current = next;
   next = h;
   
@@ -120,7 +117,7 @@ void writelife(FILE *f)
 {
   for(long i = 0; i < BUFFER_SIZE; i++) {
     for(long j = 0; j < BUFFER_SIZE; j++) {
-      if ((*current)[i][j]) {
+      if (current->cells[i][j]) {
         fprintf(f, "%ld %ld\n", i - OFFSET, j - OFFSET);
       }
     }
@@ -132,7 +129,7 @@ long countcells()
   long c = 0;
   for(long i = 0; i < BUFFER_SIZE; i++) {
     for(long j = 0; j < BUFFER_SIZE; j++) {
-      c += (*current)[i][j];
+      c += current->cells[i][j];
     }
   }
   return c;
@@ -155,6 +152,9 @@ int main(int argc, char **argv)
   }
   readlife(stdin);
 
+  current = calloc(1, sizeof(Buffer));
+  next = calloc(1, sizeof(Buffer));
+
   current_worklist = malloc(sizeof(Worklist));
   next_worklist = malloc(sizeof(Worklist));
   for (int i = 0; i < BUCKET_COUNT; i++) {
@@ -165,8 +165,8 @@ int main(int argc, char **argv)
   }
   
   for (Celllist* l = gen0; l; l = l->next){
-    (*current)[l->x + OFFSET][l->y + OFFSET] = 1;
-    push_neighbourhood(current_worklist, &(*current)[l->x + OFFSET][l->y + OFFSET]);
+    current->cells[l->x + OFFSET][l->y + OFFSET] = 1;
+    push_neighbourhood(current_worklist, &current->cells[l->x + OFFSET][l->y + OFFSET]);
   }
   freecelllist(gen0);
 

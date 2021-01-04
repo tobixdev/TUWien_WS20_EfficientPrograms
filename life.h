@@ -20,6 +20,10 @@ typedef struct worklist {
   WorklistBucket* buckets[BUCKET_COUNT];
 } Worklist;
 
+typedef struct buffer {
+  char cells[BUFFER_SIZE][BUFFER_SIZE];
+} Buffer;
+
 void push(Worklist* worklist, char* field);
 char* pop(Worklist* worklist);
 
