@@ -2,9 +2,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "life.h"
-#define BUFFER_SIZE 2300
-// this is to support negative values
-#define OFFSET 200
 
 FILE *infile;
 Celllist *gen0;
@@ -14,6 +11,23 @@ char buf2[BUFFER_SIZE][BUFFER_SIZE];
 
 char (*current)[BUFFER_SIZE][BUFFER_SIZE] = &buf1;
 char (*next)[BUFFER_SIZE][BUFFER_SIZE] = &buf2;
+
+Worklist* current_worklist;
+Worklist* next_worklist;
+
+void push(Worklist* worklist, char* field) {
+  for (int i = 0; i < worklist->current; i++) {
+    if (worklist->elements[i] == field) {
+      return;
+    }
+  }
+  worklist->current++;
+  worklist->elements[worklist->current] = field;
+}
+
+char* pop(Worklist* worklist) {
+  return worklist->elements[worklist->current--];
+}
 
 Celllist *newcell(long x, long y, Celllist *l)
 {
@@ -25,32 +39,55 @@ Celllist *newcell(long x, long y, Celllist *l)
   return c;
 }
 
-int neighbourhood(long x, long y)
+int neighbourhood(char* cell)
 {
   int n=0;
-  n += (*current)[x-1][y-1];
-  n += (*current)[x-1][y];
-  n += (*current)[x-1][y+1];
-  n += (*current)[x][y-1];
-  n += (*current)[x][y] * 9;
-  n += (*current)[x][y+1];
-  n += (*current)[x+1][y-1];
-  n += (*current)[x+1][y];
-  n += (*current)[x+1][y+1];
+  n += *(cell - BUFFER_SIZE - 1);
+  n += *(cell - BUFFER_SIZE);
+  n += *(cell - BUFFER_SIZE + 1);
+  n += *(cell - 1);
+  n += *(cell) * 9;
+  n += *(cell + 1);
+  n += *(cell + BUFFER_SIZE - 1);
+  n += *(cell + BUFFER_SIZE);
+  n += *(cell + BUFFER_SIZE + 1);
   return n;
+}
+
+void push_neighbourhood(Worklist* worklist, char* cell)
+{
+  push(worklist, cell - BUFFER_SIZE - 1);
+  push(worklist, cell - BUFFER_SIZE);
+  push(worklist, cell - BUFFER_SIZE + 1);
+  push(worklist, cell - 1);
+  push(worklist, cell);
+  push(worklist, cell + 1);
+  push(worklist, cell + BUFFER_SIZE - 1);
+  push(worklist, cell + BUFFER_SIZE);
+  push(worklist, cell + BUFFER_SIZE + 1);
 }
 
 void onegeneration()
 {
-  for (long i = 1; i < BUFFER_SIZE - 1; i++) {
-    for (long j = 1; j < BUFFER_SIZE - 1; j++) {
-      long n = neighbourhood(i, j);
-      (*next)[i][j] = (n == 3) | (n == 11) | (n == 12);
-    }
+  int i = 0;
+  while(current_worklist->current >= 0) {
+      char* cell = pop(current_worklist);
+      long n = neighbourhood(cell);
+      char* cell_new = ((char*) *next) + (cell - ((char*) *current));
+      *cell_new = (n == 3) | (n == 11) | (n == 12);
+      if ((*cell_new) != (*cell)) {
+        i++;
+        push_neighbourhood(next_worklist, cell_new);
+      }
   }
   char (*h)[BUFFER_SIZE][BUFFER_SIZE] = current;
   current = next;
   next = h;
+  
+  current_worklist->current = -1;
+  Worklist* h_worklist = current_worklist;
+  current_worklist = next_worklist;
+  next_worklist = h_worklist;
 }
 
 void freecelllist(Celllist *l)
@@ -110,9 +147,15 @@ int main(int argc, char **argv)
     exit(1);
   }
   readlife(stdin);
+
+  current_worklist = malloc(sizeof(Worklist));
+  next_worklist = malloc(sizeof(Worklist));
+  current_worklist->current = -1;
+  next_worklist->current = -1;
   
   for (Celllist* l = gen0; l; l = l->next){
     (*current)[l->x + OFFSET][l->y + OFFSET] = 1;
+    push_neighbourhood(current_worklist, &(*current)[l->x + OFFSET][l->y + OFFSET]);
   }
   freecelllist(gen0);
 
