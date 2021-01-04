@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "life.h"
-#define BUFFER_SIZE 3000
+#define BUFFER_SIZE 2300
 // this is to support negative values
-#define OFFSET 500
+#define OFFSET 200
 
 FILE *infile;
 Celllist *gen0;
