@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "life.h"
 #define BUFFER_SIZE 3000
 // this is to support negative values
@@ -24,13 +25,14 @@ Celllist *newcell(long x, long y, Celllist *l)
   return c;
 }
 
-int neighbours(long x, long y)
+int neighbourhood(long x, long y)
 {
   int n=0;
   n += (*current)[x-1][y-1];
   n += (*current)[x-1][y];
   n += (*current)[x-1][y+1];
   n += (*current)[x][y-1];
+  n += (*current)[x][y] * 9;
   n += (*current)[x][y+1];
   n += (*current)[x+1][y-1];
   n += (*current)[x+1][y];
@@ -42,14 +44,8 @@ void onegeneration()
 {
   for (long i = 1; i < BUFFER_SIZE - 1; i++) {
     for (long j = 1; j < BUFFER_SIZE - 1; j++) {
-      long n = neighbours(i, j);
-      int alive = 0;
-      if ((*current)[i][j] && (n == 2 || n == 3)) {
-        alive = 1;
-      } else if (n == 3) {
-        alive = 1;
-      }
-      (*next)[i][j] = alive;
+      long n = neighbourhood(i, j);
+      (*next)[i][j] = (n == 3) | (n == 11) | (n == 12);
     }
   }
   char (*h)[BUFFER_SIZE][BUFFER_SIZE] = current;
