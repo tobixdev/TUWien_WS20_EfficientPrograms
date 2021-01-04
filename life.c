@@ -12,6 +12,28 @@ Buffer* next;
 Worklist* current_worklist;
 Worklist* next_worklist;
 
+
+/**
+ * Things to try:
+ * - Remove branchless "optimization". (compare afterwards). Probably hurts more than it helps. 
+ * - Play with additional information in cell. e.g. neighbour count.
+ * -- Store if a cell is active or not active in a single byte -> no 2nd buffer
+ * - Improve hash set.
+ * -- https://www.sebastiansylvan.com/post/robin-hood-hashing-should-be-your-default-hash-table-implementation/
+ * -- Hash Set Size adjustments
+ * -- Modulo operation for hash -> Could be exchanged for a bitmask
+ * -- advanced: https://probablydance.com/2014/05/03/i-wrote-a-fast-hash-table/
+ * - advanced: Generate code for each state (encoded neighbourcount) and jump to it
+ * - Low level optimierungen
+ * - Execute original program on g0
+ * - Measure memory size
+ * - HashLife: https://en.wikipedia.org/wiki/Hashlife
+ * - .....
+ * 
+ * Things to beautify: 
+ * - Remove linked list creation.
+ */
+
 void push(Worklist* worklist, char* field) {
   int bucket_index = ((long) field) % BUCKET_COUNT;
   WorklistBucket* bucket = worklist->buckets[bucket_index];
