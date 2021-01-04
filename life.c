@@ -1,23 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "life.h"
+#define BUFFER_SIZE 3000
+// this is to support negative values
+#define OFFSET 500
 
 FILE *infile;
 Celllist *gen0;
 
-long alive(long x, long y, Celllist *l)
-{
-  /*fprintf(stderr,"alive x=%ld y=%ld l=%p",x,y,l);*/
-  for (; l; l = l->next) {
-    /* fprintf(stderr,"alive x=%ld y=%ld l=(%ld,%ld)",x,y,l->x, l->y);*/
-    if (x==l->x && y==l->y) {
-      /*fprintf(stderr,"=1\n");*/
-      return 1;
-    }
-  }
-  /*fprintf(stderr,"=0\n");*/
-  return 0;
-}
+char buf1[BUFFER_SIZE][BUFFER_SIZE];
+char buf2[BUFFER_SIZE][BUFFER_SIZE];
+
+char (*current)[BUFFER_SIZE][BUFFER_SIZE] = &buf1;
+char (*next)[BUFFER_SIZE][BUFFER_SIZE] = &buf2;
 
 Celllist *newcell(long x, long y, Celllist *l)
 {
@@ -29,47 +24,37 @@ Celllist *newcell(long x, long y, Celllist *l)
   return c;
 }
 
-Celllist *checkcell(long x, long y, Celllist *old, Celllist *new)
+int neighbours(long x, long y)
 {
   int n=0;
-  if (alive(x,y,new))
-    return new;
-  n += alive(x-1, y-1, old);
-  n += alive(x-1, y+0, old);
-  n += alive(x-1, y+1, old);
-  n += alive(x+0, y-1, old);
-  n += alive(x+0, y+1, old);
-  n += alive(x+1, y-1, old);
-  n += alive(x+1, y+0, old);
-  n += alive(x+1, y+1, old);
-  /*fprintf(stderr,"checkcell x=%ld y=%ld old=%p new=%p n=%d\n",x,y,old,new,n);*/
-  if (n==3)
-    return newcell(x,y,new);
-  else if (n==2 && alive(x,y,old))
-    return newcell(x,y,new);
-  else 
-    return new;
+  n += (*current)[x-1][y-1];
+  n += (*current)[x-1][y];
+  n += (*current)[x-1][y+1];
+  n += (*current)[x][y-1];
+  n += (*current)[x][y+1];
+  n += (*current)[x+1][y-1];
+  n += (*current)[x+1][y];
+  n += (*current)[x+1][y+1];
+  return n;
 }
 
-Celllist *onegeneration(Celllist *old)
+void onegeneration()
 {
-  Celllist *new = NULL;
-  Celllist *l;
-
-  for (l=old; l; l = l->next) {
-    long x = l->x;
-    long y = l->y;
-    new = checkcell(x-1, y-1, old, new);
-    new = checkcell(x-1, y+0, old, new);
-    new = checkcell(x-1, y+1, old, new);
-    new = checkcell(x+0, y-1, old, new);
-    new = checkcell(x+0, y+0, old, new);
-    new = checkcell(x+0, y+1, old, new);
-    new = checkcell(x+1, y-1, old, new);
-    new = checkcell(x+1, y+0, old, new);
-    new = checkcell(x+1, y+1, old, new);
+  for (long i = 1; i < BUFFER_SIZE - 1; i++) {
+    for (long j = 1; j < BUFFER_SIZE - 1; j++) {
+      long n = neighbours(i, j);
+      int alive = 0;
+      if ((*current)[i][j] && (n == 2 || n == 3)) {
+        alive = 1;
+      } else if (n == 3) {
+        alive = 1;
+      }
+      (*next)[i][j] = alive;
+    }
   }
-  return new;
+  char (*h)[BUFFER_SIZE][BUFFER_SIZE] = current;
+  current = next;
+  next = h;
 }
 
 void freecelllist(Celllist *l)
@@ -91,23 +76,30 @@ Celllist *readlife(FILE *f)
   return gen0;
 }
 
-void writelife(FILE *f, Celllist *l)
+void writelife(FILE *f)
 {
-  for (; l; l = l->next)
-    fprintf(f, "%ld %ld\n", l->x, l->y);
+  for(long i = 0; i < BUFFER_SIZE; i++) {
+    for(long j = 0; j < BUFFER_SIZE; j++) {
+      if ((*current)[i][j]) {
+        fprintf(f, "%ld %ld\n", i - OFFSET, j - OFFSET);
+      }
+    }
+  }
 }
 
-long countcells(Celllist *l)
+long countcells()
 {
-  long c=0;
-  for (; l; l = l->next)
-    c++;
+  long c = 0;
+  for(long i = 0; i < BUFFER_SIZE; i++) {
+    for(long j = 0; j < BUFFER_SIZE; j++) {
+      c += (*current)[i][j];
+    }
+  }
   return c;
 }
 
 int main(int argc, char **argv)
 {
-  Celllist *current;
   long generations;
   long i;
   char *endptr;
@@ -121,13 +113,17 @@ int main(int argc, char **argv)
     fprintf(stderr, "\"%s\" not a valid generation count\n", argv[3]);
     exit(1);
   }
-  current = readlife(stdin);
-  for (i=0; i<generations; i++) {
-    Celllist *old = current;
-    current = onegeneration(current);
-    freecelllist(old);
+  readlife(stdin);
+  
+  for (Celllist* l = gen0; l; l = l->next){
+    (*current)[l->x + OFFSET][l->y + OFFSET] = 1;
   }
-  writelife(stdout, current);
-  fprintf(stderr,"%ld cells alive\n", countcells(current));
+  freecelllist(gen0);
+
+  for (i=0; i<generations; i++) {
+    onegeneration();
+  }
+  writelife(stdout);
+  fprintf(stderr,"%ld cells alive\n", countcells());
   return 0;
 }
