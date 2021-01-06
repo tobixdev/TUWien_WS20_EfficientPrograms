@@ -35,24 +35,39 @@ Worklist* next_worklist;
  */
 
 void push(Worklist* worklist, char* field) {
-  int bucket_index = ((long) field) % BUCKET_COUNT;
-  WorklistBucket* bucket = worklist->buckets[bucket_index];
+  int probe_start = ((size_t) field) % WORKLIST_SIZE;
 
-  for (int i = 0; i < bucket->current; i++) {
-    if (bucket->elements[i] == field) {
+  for (int i = probe_start; i < WORKLIST_SIZE; i++) {
+    if (worklist->elements[i] == NULL) {
+      worklist->elements[i] = field;
+      return;
+    } else if (worklist->elements[i] == field) {
       return;
     }
   }
 
-  bucket->current++;
-  bucket->elements[bucket->current] = field;
+  // if the end of the list is reached start at the beginning
+  for (int i = 0; i < probe_start; i++) {
+    if (worklist->elements[i] == NULL) {
+      worklist->elements[i] = field;
+      return;
+    } else if (worklist->elements[i] == field) {
+      return;
+    }
+  }
+
+  printf("Worklist is full. Aborting program.");
+  exit(-1);
 }
 
 char* pop(Worklist* worklist) {
-  for (int i = 0; i < BUCKET_COUNT; i++) {
-    WorklistBucket* bucket = worklist->buckets[i];
-    if (bucket->current >= 0) {
-      return bucket->elements[bucket->current--];
+  for (int i = worklist->last_probed; i < WORKLIST_SIZE; i++)
+  {
+    char* element = worklist->elements[i];
+    if (element != NULL) {
+      worklist->elements[i] = NULL;
+      worklist->last_probed = i + 1;
+      return element;
     }
   }
   return NULL;
@@ -114,6 +129,7 @@ void onegeneration()
   Worklist* h_worklist = current_worklist;
   current_worklist = next_worklist;
   next_worklist = h_worklist;
+  next_worklist->last_probed = 0;
 }
 
 void freecelllist(Celllist *l)
@@ -177,15 +193,9 @@ int main(int argc, char **argv)
   current = calloc(1, sizeof(Buffer));
   next = calloc(1, sizeof(Buffer));
 
-  current_worklist = malloc(sizeof(Worklist));
-  next_worklist = malloc(sizeof(Worklist));
-  for (int i = 0; i < BUCKET_COUNT; i++) {
-    current_worklist->buckets[i] = malloc(sizeof(WorklistBucket));
-    next_worklist->buckets[i] = malloc(sizeof(WorklistBucket));
-    current_worklist->buckets[i]->current = -1;
-    next_worklist->buckets[i]->current = -1;
-  }
-  
+  current_worklist = calloc(1, sizeof(Worklist));
+  next_worklist = calloc(1, sizeof(Worklist));
+
   for (Celllist* l = gen0; l; l = l->next){
     current->cells[l->x + OFFSET][l->y + OFFSET] = 1;
     push_neighbourhood(current_worklist, &current->cells[l->x + OFFSET][l->y + OFFSET]);
