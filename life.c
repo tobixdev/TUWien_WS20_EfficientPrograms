@@ -27,6 +27,7 @@ Worklist* next_worklist;
  * - Low level optimierungen
  * - Execute original program on g0
  * - Measure memory size
+ * - Come up with a better hash. Currently we have a long probings.
  * - HashLife: https://en.wikipedia.org/wiki/Hashlife
  * - .....
  * 
