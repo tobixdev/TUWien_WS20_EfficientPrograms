@@ -20,8 +20,6 @@ Worklist* next_worklist;
  * -- Store if a cell is active or not active in a single byte -> no 2nd buffer
  * - Improve hash set.
  * -- https://www.sebastiansylvan.com/post/robin-hood-hashing-should-be-your-default-hash-table-implementation/
- * -- Hash Set Size adjustments
- * -- Modulo operation for hash -> Could be exchanged for a bitmask
  * -- advanced: https://probablydance.com/2014/05/03/i-wrote-a-fast-hash-table/
  * - advanced: Generate code for each state (encoded neighbourcount) and jump to it
  * - Low level optimierungen
@@ -35,8 +33,13 @@ Worklist* next_worklist;
  * - Remove linked list creation.
  */
 
+size_t inline hash(char* field) {
+  // NOTE: WORKLIST_SIZE has to be a power of two
+  return ((size_t)field) & (WORKLIST_SIZE - 1);
+}
+
 void push(Worklist* worklist, char* field) {
-  int probe_start = ((size_t) field) % WORKLIST_SIZE;
+  int probe_start = hash(field);
 
   for (int i = probe_start; i < WORKLIST_SIZE; i++) {
     if (worklist->elements[i] == NULL) {
