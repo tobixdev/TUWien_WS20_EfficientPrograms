@@ -123,20 +123,33 @@ void onegeneration()
   {
     char* center = current_worklist->elements[i];
     if (center != NULL) {
-      char* cell = center - 1 - BUFFER_SIZE;
+      char* cell = center - BUFFER_SIZE;
       for(int i = -1; i <= 1; i++) {
-        for(int j = -1; j <= 1; j++) {
-          if ((*cell & BM_0010_0000) == 0) {
-            char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
-            long n = neighbourhood(cell);
-            void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
-            fn(cell_new);
-            mark_as_processed(cell);
-            processed[processed_index++] = cell;
-          }
-          cell += 1;
+        if ((*(cell - 1) & BM_0010_0000) == 0) {
+          char* cell_new = ((char*) next->cells) + ((cell - 1) - ((char*) current->cells));
+          long n = neighbourhood((cell -1));
+          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *(cell - 1)];
+          fn(cell_new);
+          mark_as_processed((cell - 1));
+          processed[processed_index++] = (cell - 1);
         }
-        cell += BUFFER_SIZE - 3;
+        if ((*cell & BM_0010_0000) == 0) {
+          char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
+          long n = neighbourhood(cell);
+          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
+          fn(cell_new);
+          mark_as_processed(cell);
+          processed[processed_index++] = cell;
+        }
+        if ((*(cell + 1) & BM_0010_0000) == 0) {
+          char* cell_new = ((char*) next->cells) + ((cell + 1) - ((char*) current->cells));
+          long n = neighbourhood((cell + 1));
+          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *(cell + 1)];
+          fn(cell_new);
+          mark_as_processed((cell + 1));
+          processed[processed_index++] = (cell + 1);
+        }
+        cell += BUFFER_SIZE;
       }
     }
     current_worklist->elements[i] = NULL;
