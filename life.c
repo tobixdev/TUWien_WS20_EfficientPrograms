@@ -58,26 +58,6 @@ void (*dispatch[18])(char*) = {
   kill, // alive + 8 neigh
 };
 
-/**
- * Things to try:
- * - Remove branchless "optimization". (compare afterwards). Probably hurts more than it helps. 
- * - Play with additional information in cell. e.g. neighbour count.
- * -- Store if a cell is active or not active in a single byte -> no 2nd buffer
- * - Improve hash set.
- * -- https://www.sebastiansylvan.com/post/robin-hood-hashing-should-be-your-default-hash-table-implementation/
- * -- advanced: https://probablydance.com/2014/05/03/i-wrote-a-fast-hash-table/
- * - advanced: Generate code for each state (encoded neighbourcount) and jump to it
- * - Low level optimierungen
- * - Execute original program on g0
- * - Measure memory size
- * - Come up with a better hash. Currently we have a long probings.
- * - HashLife: https://en.wikipedia.org/wiki/Hashlife
- * - .....
- * 
- * Things to beautify: 
- * - Remove linked list creation.
- */
-
 size_t inline hash(char* field) {
   // NOTE: WORKLIST_SIZE has to be a power of two
   return ((size_t)field) & (WORKLIST_SIZE - 1);
@@ -119,18 +99,18 @@ Celllist *newcell(long x, long y, Celllist *l)
   return c;
 }
 
-int neighbourhood(char* cell)
+int inline neighbourhood(char* cell)
 {
   int n=0;
-  n += *(cell - BUFFER_SIZE - 1) & BM_0000_0001;
-  n += *(cell - BUFFER_SIZE) & BM_0000_0001;
-  n += *(cell - BUFFER_SIZE + 1) & BM_0000_0001;
-  n += *(cell - 1) & BM_0000_0001;
-  n += *(cell + 1) & BM_0000_0001;
-  n += *(cell + BUFFER_SIZE - 1) & BM_0000_0001;
-  n += *(cell + BUFFER_SIZE) & BM_0000_0001;
-  n += *(cell + BUFFER_SIZE + 1) & BM_0000_0001;
-  return n;
+  n += *(cell - BUFFER_SIZE - 1);
+  n += *(cell - BUFFER_SIZE);
+  n += *(cell - BUFFER_SIZE + 1);
+  n += *(cell - 1);
+  n += *(cell + 1);
+  n += *(cell + BUFFER_SIZE - 1);
+  n += *(cell + BUFFER_SIZE);
+  n += *(cell + BUFFER_SIZE + 1);
+  return n & (BM_0010_0000 - 1);
 }
 
 void inline mark_as_processed(char* field) {
