@@ -1,0 +1,11 @@
+./life: Killed
+
+ Performance counter stats for './life 3000':
+
+     3034331527121      cycles                                                      
+     1750226400744      instructions              #    0.58  insn per cycle                                            
+           5847772      cache-misses                                                
+        1048252105      branch-misses                                               
+
+     900.019939769 seconds time elapsed
+

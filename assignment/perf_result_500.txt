@@ -1,0 +1,11 @@
+841 cells alive
+
+ Performance counter stats for './life 500':
+
+       57556504738      cycles                                                      
+       56864958655      instructions              #    0.99  insn per cycle                                            
+            106416      cache-misses                                                
+         104507047      branch-misses                                               
+
+      17.136604342 seconds time elapsed
+
