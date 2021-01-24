@@ -1,7 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include "life.h"
+
+const char BM_0010_0000 = 32;
+const char BM_0000_0001 = 1;
 
 FILE *infile;
 Celllist *gen0;
@@ -115,15 +119,19 @@ Celllist *newcell(long x, long y, Celllist *l)
 int neighbourhood(char* cell)
 {
   int n=0;
-  n += *(cell - BUFFER_SIZE - 1);
-  n += *(cell - BUFFER_SIZE);
-  n += *(cell - BUFFER_SIZE + 1);
-  n += *(cell - 1);
-  n += *(cell + 1);
-  n += *(cell + BUFFER_SIZE - 1);
-  n += *(cell + BUFFER_SIZE);
-  n += *(cell + BUFFER_SIZE + 1);
+  n += *(cell - BUFFER_SIZE - 1) & BM_0000_0001;
+  n += *(cell - BUFFER_SIZE) & BM_0000_0001;
+  n += *(cell - BUFFER_SIZE + 1) & BM_0000_0001;
+  n += *(cell - 1) & BM_0000_0001;
+  n += *(cell + 1) & BM_0000_0001;
+  n += *(cell + BUFFER_SIZE - 1) & BM_0000_0001;
+  n += *(cell + BUFFER_SIZE) & BM_0000_0001;
+  n += *(cell + BUFFER_SIZE + 1) & BM_0000_0001;
   return n;
+}
+
+void inline mark_as_processed(char* field) {
+  *field |= BM_0010_0000;
 }
 
 void onegeneration()
@@ -135,14 +143,33 @@ void onegeneration()
       for(int i = -1; i <= 1; i++) {
         for(int j = -1; j <= 1; j++) {
           char* cell = center + BUFFER_SIZE * i + j;
-          char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
-          long n = neighbourhood(cell);
-          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
-          fn(cell_new);
+          if ((*cell & BM_0010_0000) == 0) {
+            char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
+            long n = neighbourhood(cell);
+            void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
+            fn(cell_new);
+            mark_as_processed(cell);
+          }
         }
       }
     }
+  }
+
+  for (int i = 0; i < WORKLIST_SIZE; i++)
+  {
+    char* center = current_worklist->elements[i];
     current_worklist->elements[i] = NULL;
+    if (center != NULL) {
+      *(center - BUFFER_SIZE - 1) &= BM_0000_0001;
+      *(center - BUFFER_SIZE) &= BM_0000_0001;
+      *(center - BUFFER_SIZE + 1) &= BM_0000_0001;
+      *(center - 1) &= BM_0000_0001;
+      *(center) &= BM_0000_0001;
+      *(center + 1) &= BM_0000_0001;
+      *(center + BUFFER_SIZE - 1) &= BM_0000_0001;
+      *(center + BUFFER_SIZE) &= BM_0000_0001;
+      *(center + BUFFER_SIZE + 1) &= BM_0000_0001;
+    }
   }
 
   Buffer* h = current;
@@ -177,7 +204,7 @@ void writelife(FILE *f)
 {
   for(long i = 0; i < BUFFER_SIZE; i++) {
     for(long j = 0; j < BUFFER_SIZE; j++) {
-      if (current->cells[i][j]) {
+      if (current->cells[i][j] & BM_0000_0001) {
         fprintf(f, "%ld %ld\n", i - OFFSET, j - OFFSET);
       }
     }
@@ -189,7 +216,9 @@ long countcells()
   long c = 0;
   for(long i = 0; i < BUFFER_SIZE; i++) {
     for(long j = 0; j < BUFFER_SIZE; j++) {
-      c += current->cells[i][j];
+      if (current->cells[i][j] & BM_0000_0001) {
+        c += 1;
+      }
     }
   }
   return c;
