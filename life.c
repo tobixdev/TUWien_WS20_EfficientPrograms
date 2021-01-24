@@ -13,6 +13,9 @@ Celllist *gen0;
 Buffer* current;
 Buffer* next;
 
+size_t processed_index = 0;
+char* processed[50000];
+
 Worklist* current_worklist;
 Worklist* next_worklist;
 
@@ -149,28 +152,20 @@ void onegeneration()
             void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
             fn(cell_new);
             mark_as_processed(cell);
+            processed[processed_index++] = cell;
           }
         }
       }
     }
+    current_worklist->elements[i] = NULL;
   }
 
-  for (int i = 0; i < WORKLIST_SIZE; i++)
+  for (int i = 0; i < processed_index; i++)
   {
-    char* center = current_worklist->elements[i];
-    current_worklist->elements[i] = NULL;
-    if (center != NULL) {
-      *(center - BUFFER_SIZE - 1) &= BM_0000_0001;
-      *(center - BUFFER_SIZE) &= BM_0000_0001;
-      *(center - BUFFER_SIZE + 1) &= BM_0000_0001;
-      *(center - 1) &= BM_0000_0001;
-      *(center) &= BM_0000_0001;
-      *(center + 1) &= BM_0000_0001;
-      *(center + BUFFER_SIZE - 1) &= BM_0000_0001;
-      *(center + BUFFER_SIZE) &= BM_0000_0001;
-      *(center + BUFFER_SIZE + 1) &= BM_0000_0001;
-    }
+    *processed[i] &= BM_0000_0001;
   }
+  
+  processed_index = 0;
 
   Buffer* h = current;
   current = next;
