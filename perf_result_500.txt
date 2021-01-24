@@ -2,10 +2,10 @@
 
  Performance counter stats for './life 500':
 
-         101461808      cycles                                                      
-         159148304      instructions              #    1.57  insn per cycle                                            
-             32650      cache-misses                                                
-           1218998      branch-misses                                               
+          98958839      cycles                                                      
+         153711637      instructions              #    1.55  insn per cycle                                            
+             42700      cache-misses                                                
+           1146621      branch-misses                                               
 
-       0.050606400 seconds time elapsed
+       0.046082272 seconds time elapsed
 

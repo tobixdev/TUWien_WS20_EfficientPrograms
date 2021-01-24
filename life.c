@@ -117,40 +117,32 @@ void inline mark_as_processed(char* field) {
   *field |= BM_0010_0000;
 }
 
+void inline handle_cell(char* cell) {
+  if ((*cell & BM_0010_0000) == 0) {
+    char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
+    long n = neighbourhood(cell);
+    void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
+    fn(cell_new);
+    mark_as_processed(cell);
+    processed[processed_index++] = cell;
+  }
+}
+
 void onegeneration()
 {
   for (int i = 0; i < WORKLIST_SIZE; i++)
   {
     char* center = current_worklist->elements[i];
     if (center != NULL) {
-      char* cell = center - BUFFER_SIZE;
-      for(int i = -1; i <= 1; i++) {
-        if ((*(cell - 1) & BM_0010_0000) == 0) {
-          char* cell_new = ((char*) next->cells) + ((cell - 1) - ((char*) current->cells));
-          long n = neighbourhood((cell -1));
-          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *(cell - 1)];
-          fn(cell_new);
-          mark_as_processed((cell - 1));
-          processed[processed_index++] = (cell - 1);
-        }
-        if ((*cell & BM_0010_0000) == 0) {
-          char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
-          long n = neighbourhood(cell);
-          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
-          fn(cell_new);
-          mark_as_processed(cell);
-          processed[processed_index++] = cell;
-        }
-        if ((*(cell + 1) & BM_0010_0000) == 0) {
-          char* cell_new = ((char*) next->cells) + ((cell + 1) - ((char*) current->cells));
-          long n = neighbourhood((cell + 1));
-          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *(cell + 1)];
-          fn(cell_new);
-          mark_as_processed((cell + 1));
-          processed[processed_index++] = (cell + 1);
-        }
-        cell += BUFFER_SIZE;
-      }
+      handle_cell(center - BUFFER_SIZE - 1);
+      handle_cell(center - 1);
+      handle_cell(center + BUFFER_SIZE - 1);
+      handle_cell(center - BUFFER_SIZE);
+      handle_cell(center);
+      handle_cell(center + BUFFER_SIZE);
+      handle_cell(center - BUFFER_SIZE + 1);
+      handle_cell(center + 1);
+      handle_cell(center + BUFFER_SIZE + 1);
     }
     current_worklist->elements[i] = NULL;
   }
