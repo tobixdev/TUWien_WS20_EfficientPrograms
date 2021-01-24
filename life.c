@@ -143,9 +143,9 @@ void onegeneration()
   {
     char* center = current_worklist->elements[i];
     if (center != NULL) {
+      char* cell = center - 1 - BUFFER_SIZE;
       for(int i = -1; i <= 1; i++) {
         for(int j = -1; j <= 1; j++) {
-          char* cell = center + BUFFER_SIZE * i + j;
           if ((*cell & BM_0010_0000) == 0) {
             char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
             long n = neighbourhood(cell);
@@ -154,7 +154,9 @@ void onegeneration()
             mark_as_processed(cell);
             processed[processed_index++] = cell;
           }
+          cell += 1;
         }
+        cell += BUFFER_SIZE - 3;
       }
     }
     current_worklist->elements[i] = NULL;
