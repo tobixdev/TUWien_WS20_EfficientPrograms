@@ -14,7 +14,7 @@ Buffer* current;
 Buffer* next;
 
 size_t processed_index = 0;
-char* processed[50000];
+char* processed[WORKLIST_SIZE * 9];
 
 Worklist* current_worklist;
 Worklist* next_worklist;

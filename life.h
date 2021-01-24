@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #define BUFFER_SIZE 2300
-#define WORKLIST_SIZE 32768
+#define WORKLIST_SIZE 4096
 // this is to support negative values
 #define OFFSET 200
 
