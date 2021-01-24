@@ -12,19 +12,6 @@ Buffer* next;
 Worklist* current_worklist;
 Worklist* next_worklist;
 
-void push_neighbourhood(Worklist* worklist, char* cell)
-{
-  push(worklist, cell - BUFFER_SIZE - 1);
-  push(worklist, cell - BUFFER_SIZE);
-  push(worklist, cell - BUFFER_SIZE + 1);
-  push(worklist, cell - 1);
-  push(worklist, cell);
-  push(worklist, cell + 1);
-  push(worklist, cell + BUFFER_SIZE - 1);
-  push(worklist, cell + BUFFER_SIZE);
-  push(worklist, cell + BUFFER_SIZE + 1);
-}
-
 void alive(char* field) {
   *field = 1;
 }
@@ -35,12 +22,12 @@ void dead(char* field) {
 
 void kill(char* field) {
   *field = 0;
-  push_neighbourhood(next_worklist, field);
+  push(next_worklist, field);
 }
 
 void resurrect(char* field) {
   *field = 1;
-  push_neighbourhood(next_worklist, field);
+  push(next_worklist, field);
 }
 
 void (*dispatch[18])(char*) = {
@@ -143,14 +130,19 @@ void onegeneration()
 {
   for (int i = 0; i < WORKLIST_SIZE; i++)
   {
-    char* cell = current_worklist->elements[i];
-    if (cell != NULL) {
-      current_worklist->elements[i] = NULL;
-      char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
-      long n = neighbourhood(cell);
-      void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
-      fn(cell_new);
+    char* center = current_worklist->elements[i];
+    if (center != NULL) {
+      for(int i = -1; i <= 1; i++) {
+        for(int j = -1; j <= 1; j++) {
+          char* cell = center + BUFFER_SIZE * i + j;
+          char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
+          long n = neighbourhood(cell);
+          void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
+          fn(cell_new);
+        }
+      }
     }
+    current_worklist->elements[i] = NULL;
   }
 
   Buffer* h = current;
@@ -227,8 +219,9 @@ int main(int argc, char **argv)
   next_worklist = calloc(1, sizeof(Worklist));
 
   for (Celllist* l = gen0; l; l = l->next){
-    current->cells[l->x + OFFSET][l->y + OFFSET] = 1;
-    push_neighbourhood(current_worklist, &current->cells[l->x + OFFSET][l->y + OFFSET]);
+    char* field = &current->cells[l->x + OFFSET][l->y + OFFSET];
+    *field = 1;
+    push(current_worklist, field);
   }
   freecelllist(gen0);
 

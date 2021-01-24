@@ -2,10 +2,10 @@
 
  Performance counter stats for './life 3000':
 
-        2199587418      cycles                                                      
-        2783529249      instructions              #    1.27  insn per cycle                                            
-            203075      cache-misses                                                
-          31309253      branch-misses                                               
+        2618672701      cycles                                                      
+        2929301659      instructions              #    1.12  insn per cycle                                            
+            235000      cache-misses                                                
+          44196110      branch-misses                                               
 
-       0.667420240 seconds time elapsed
+       0.791105165 seconds time elapsed
 
