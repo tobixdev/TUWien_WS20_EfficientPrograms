@@ -19,25 +19,29 @@ char* processed[WORKLIST_SIZE * 9];
 Worklist* current_worklist;
 Worklist* next_worklist;
 
-void alive(char* field) {
-  *field = 1;
+bool alive(char* cell) {
+  *cell = 1;
+  return true;
 }
 
-void dead(char* field) {
-  *field = 0;
+bool dead(char* cell) {
+  *cell = 0;
+  return true;
 }
 
-void kill(char* field) {
-  *field = 0;
-  push(next_worklist, field);
+bool kill(char* cell) {
+  *cell = 0;
+  push(next_worklist, cell);
+  return false;
 }
 
-void resurrect(char* field) {
-  *field = 1;
-  push(next_worklist, field);
+bool resurrect(char* cell) {
+  *cell = 1;
+  push(next_worklist, cell);
+  return false;
 }
 
-void (*dispatch[18])(char*) = {
+bool (*dispatch[18])(char*) = {
   dead, // dead  + 0 neigh
   kill, // alive + 0 neigh
   dead, // dead  + 1 neigh
@@ -121,10 +125,11 @@ void inline handle_cell(char* cell) {
   if ((*cell & BM_0010_0000) == 0) {
     char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
     long n = neighbourhood(cell);
-    void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
-    fn(cell_new);
+    bool needs_deletion = dispatch[(size_t) (n << 1) | *cell](cell_new);
     mark_as_processed(cell);
-    processed[processed_index++] = cell;
+    if (needs_deletion) {
+      processed[processed_index++] = cell;
+    }
   }
 }
 
