@@ -12,6 +12,57 @@ Buffer* next;
 Worklist* current_worklist;
 Worklist* next_worklist;
 
+void push_neighbourhood(Worklist* worklist, char* cell)
+{
+  push(worklist, cell - BUFFER_SIZE - 1);
+  push(worklist, cell - BUFFER_SIZE);
+  push(worklist, cell - BUFFER_SIZE + 1);
+  push(worklist, cell - 1);
+  push(worklist, cell);
+  push(worklist, cell + 1);
+  push(worklist, cell + BUFFER_SIZE - 1);
+  push(worklist, cell + BUFFER_SIZE);
+  push(worklist, cell + BUFFER_SIZE + 1);
+}
+
+void alive(char* field) {
+  *field = 1;
+}
+
+void dead(char* field) {
+  *field = 0;
+}
+
+void kill(char* field) {
+  *field = 0;
+  push_neighbourhood(next_worklist, field);
+}
+
+void resurrect(char* field) {
+  *field = 1;
+  push_neighbourhood(next_worklist, field);
+}
+
+void (*dispatch[18])(char*) = {
+  dead, // dead  + 0 neigh
+  kill, // alive + 0 neigh
+  dead, // dead  + 1 neigh
+  kill, // alive + 1 neigh
+  dead, // dead  + 2 neigh
+  alive, // alive + 2 neigh
+  resurrect, // dead  + 3 neigh
+  alive, // alive + 3 neigh
+  dead, // dead  + 4 neigh
+  kill, // alive + 4 neigh
+  dead, // dead  + 5 neigh
+  kill, // alive + 5 neigh
+  dead, // dead  + 6 neigh
+  kill, // alive + 6 neigh
+  dead, // dead  + 7 neigh
+  kill, // alive + 7 neigh
+  dead, // dead  + 8 neigh
+  kill, // alive + 8 neigh
+};
 
 /**
  * Things to try:
@@ -64,19 +115,6 @@ void push(Worklist* worklist, char* field) {
   exit(-1);
 }
 
-char* pop(Worklist* worklist) {
-  for (int i = worklist->last_probed; i < WORKLIST_SIZE; i++)
-  {
-    char* element = worklist->elements[i];
-    if (element != NULL) {
-      worklist->elements[i] = NULL;
-      worklist->last_probed = i + 1;
-      return element;
-    }
-  }
-  return NULL;
-}
-
 Celllist *newcell(long x, long y, Celllist *l)
 {
   Celllist *c = malloc(sizeof(Celllist));
@@ -94,7 +132,6 @@ int neighbourhood(char* cell)
   n += *(cell - BUFFER_SIZE);
   n += *(cell - BUFFER_SIZE + 1);
   n += *(cell - 1);
-  n += *(cell) * 9;
   n += *(cell + 1);
   n += *(cell + BUFFER_SIZE - 1);
   n += *(cell + BUFFER_SIZE);
@@ -102,30 +139,20 @@ int neighbourhood(char* cell)
   return n;
 }
 
-void push_neighbourhood(Worklist* worklist, char* cell)
-{
-  push(worklist, cell - BUFFER_SIZE - 1);
-  push(worklist, cell - BUFFER_SIZE);
-  push(worklist, cell - BUFFER_SIZE + 1);
-  push(worklist, cell - 1);
-  push(worklist, cell);
-  push(worklist, cell + 1);
-  push(worklist, cell + BUFFER_SIZE - 1);
-  push(worklist, cell + BUFFER_SIZE);
-  push(worklist, cell + BUFFER_SIZE + 1);
-}
-
 void onegeneration()
 {
-  char* cell = NULL;
-  while((cell = pop(current_worklist)) != NULL) {
-      long n = neighbourhood(cell);
+  for (int i = 0; i < WORKLIST_SIZE; i++)
+  {
+    char* cell = current_worklist->elements[i];
+    if (cell != NULL) {
+      current_worklist->elements[i] = NULL;
       char* cell_new = ((char*) next->cells) + (cell - ((char*) current->cells));
-      *cell_new = (n == 3) | (n == 11) | (n == 12);
-      if ((*cell_new) != (*cell)) {
-        push_neighbourhood(next_worklist, cell_new);
-      }
+      long n = neighbourhood(cell);
+      void (*fn)(char*) = dispatch[(size_t) (n << 1) | *cell];
+      fn(cell_new);
+    }
   }
+
   Buffer* h = current;
   current = next;
   next = h;
@@ -133,7 +160,6 @@ void onegeneration()
   Worklist* h_worklist = current_worklist;
   current_worklist = next_worklist;
   next_worklist = h_worklist;
-  next_worklist->last_probed = 0;
 }
 
 void freecelllist(Celllist *l)
