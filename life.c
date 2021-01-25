@@ -329,7 +329,6 @@ void (*dispatch[256])(uchar*) = {
   unreachable, // (63) + 196  1111 1111    TOO MANY NEIGHBOURS
 };
 
-// TODO: 256 bit lookup -> 1st bit indicates fix point, repetition on already executed bit
 uchar transfer[(size_t)256] = {
   128 + 0,  // (00) 0000 0000            0 neighbours
   128 + 2,  // (01) 0000 0001
