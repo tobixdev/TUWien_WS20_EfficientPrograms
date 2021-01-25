@@ -11,16 +11,16 @@ typedef struct celllist {
 } Celllist;
 
 typedef struct worklist {
-  char* elements[WORKLIST_SIZE];
+  unsigned char* elements[WORKLIST_SIZE];
   int last_probed;
 } Worklist;
 
 typedef struct buffer {
-  char cells[BUFFER_SIZE][BUFFER_SIZE];
+  unsigned char cells[BUFFER_SIZE][BUFFER_SIZE];
 } Buffer;
 
-void push(Worklist* worklist, char* field);
-char* pop(Worklist* worklist);
+void push(Worklist* worklist, unsigned char* field);
+unsigned char* pop(Worklist* worklist);
 
 extern Celllist *gen0;
 extern FILE *infile;
